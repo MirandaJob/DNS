@@ -1,0 +1,73 @@
+import java.util.HashMap;
+import java.util.Map;
+
+public class ComplexDNSExample2 {
+
+    public static void main(String[] args) {
+        // Create a DNS resolver
+        DNSResolver dnsResolver = new DNSResolver();
+
+        // Add DNS records for different domains
+        dnsResolver.addRecord("example.com", new DNSRecord("192.168.1.1", DNSRecord.RecordType.A));
+        dnsResolver.addRecord("example.com", new DNSRecord("mail.example.com", DNSRecord.RecordType.CNAME));
+        dnsResolver.addRecord("example.com", new DNSRecord("mx1.example.com", DNSRecord.RecordType.MX));
+        dnsResolver.addRecord("example.com", new DNSRecord("ns1.example.com", DNSRecord.RecordType.NS));
+
+        dnsResolver.addRecord("example.net", new DNSRecord("192.168.2.1", DNSRecord.RecordType.A));
+        dnsResolver.addRecord("example.net", new DNSRecord("mail.example.net", DNSRecord.RecordType.CNAME));
+        dnsResolver.addRecord("example.net", new DNSRecord("mx1.example.net", DNSRecord.RecordType.MX));
+        dnsResolver.addRecord("example.net", new DNSRecord("ns1.example.net", DNSRecord.RecordType.NS));
+
+        // Resolve DNS queries for different domains and record types
+        resolveAndPrint(dnsResolver, "example.com", DNSRecord.RecordType.A);
+        resolveAndPrint(dnsResolver, "example.com", DNSRecord.RecordType.CNAME);
+        resolveAndPrint(dnsResolver, "example.net", DNSRecord.RecordType.A);
+        resolveAndPrint(dnsResolver, "example.net", DNSRecord.RecordType.CNAME);
+    }
+
+    // Helper method to resolve DNS query and print result
+    private static void resolveAndPrint(DNSResolver resolver, String domain, DNSRecord.RecordType type) {
+        String result = resolver.resolve(domain, type);
+        System.out.println("Resolved " + type + " record for " + domain + ": " + result);
+    }
+
+    // DNS record representation
+    static class DNSRecord {
+        enum RecordType {A, CNAME, MX, NS}
+
+        private String data;
+        private RecordType type;
+
+        public DNSRecord(String data, RecordType type) {
+            this.data = data;
+            this.type = type;
+        }
+
+        public String getData() {
+            return data;
+        }
+
+        public RecordType getType() {
+            return type;
+        }
+    }
+
+    // DNS resolver
+    static class DNSResolver {
+        private Map<String, Map<DNSRecord.RecordType, DNSRecord>> dnsCache = new HashMap<>();
+
+        // Add DNS record to cache
+        public void addRecord(String domain, DNSRecord record) {
+            dnsCache.computeIfAbsent(domain, k -> new HashMap<>()).put(record.getType(), record);
+        }
+
+        // Resolve DNS query
+        public String resolve(String domain, DNSRecord.RecordType type) {
+            Map<DNSRecord.RecordType, DNSRecord> records = dnsCache.get(domain);
+            if (records != null && records.containsKey(type)) {
+                return records.get(type).getData();
+            }
+            return null; // DNS record not found
+        }
+    }
+}
